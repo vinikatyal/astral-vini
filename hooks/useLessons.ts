@@ -33,15 +33,14 @@ export function useLessons() {
       console.log("Generated Lessons:", result);
 
       // Optimistically mark them as "generated"
-      const generatedLessons: Lesson[] = result.data.map((item: Lesson) => ({
-        id: item.id,
-        title: item.title,
-        description: item.description,
+     
+      const generatedLessons: Lesson[] = [{
+        id: Math.random().toString(36).substr(2, 9),
         outline: result.outline,
-        status: "generated",
+        details: result.details,
+        status: result.status,
         updated_at: new Date().toISOString(),
-      }));
-
+      }];
       setLessons((prev) => [...generatedLessons, ...prev]);
     } catch (err: { message?: string } | any  ) {
       console.error("Error generating lessons:", err);

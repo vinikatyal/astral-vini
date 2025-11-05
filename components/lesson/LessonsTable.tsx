@@ -35,11 +35,11 @@ export default function LessonsTable({ lessons }: { lessons: Lesson[] }) {
                                             type="button"
                                             onClick={() => router.push(`/lessons/${l.id}`)}
                                             className="line-clamp-1 max-w-[28rem] text-left font-medium text-indigo-700 hover:underline"
-                                            title={l.title}
+                                            title={l.outline}
                                         >
-                                            {l.title}
+                                            {l.outline}
                                         </button>
-                                        <p className="mt-1 line-clamp-1 text-xs text-gray-500">{l.description}</p>
+                                        <p className="mt-1 line-clamp-1 text-xs text-gray-500">{l.details}</p>
                                     </td>
                                     <td className="px-4 py-3">
                                         <StatusBadge status={l.status} />
@@ -51,7 +51,7 @@ export default function LessonsTable({ lessons }: { lessons: Lesson[] }) {
                                             onClick={() => router.push(`/lessons/${l.id}`)}
                                             className="rounded-xl border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
                                         >
-                                            Open
+                                            View
                                         </button>
                                     </td>
                                 </tr>

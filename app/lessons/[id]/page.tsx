@@ -31,9 +31,7 @@ export default async function LessonDetailsPage({ params }: { params: { id: stri
   // create chapter api here
   return <div>
     {result.tsxSource ? (
-      <TsxRunner source={result.tsxSource} props={{
-        lesson: lessonInfo
-      }} />
+      <TsxRunner source={result.tsxSource} />
     ) : (
       <p className="text-red-600">No lesson TSX source available.</p>
     )}

@@ -59,7 +59,7 @@ Your task is to transform the given outline into a detailed, structured lesson p
 - Make it engaging and age-appropriate
 
 **IMAGE GUIDELINES:**
-- Add 1-2 relevant educational images from Unsplash using markdown syntax: ![description](https://source.unsplash.com/800x600/?keyword)
+- Add 1-2 relevant educational images from Unsplash or Pexels per major section
 - Only include images that enhance understanding of the topic
 
 **OUTPUT FORMAT:**

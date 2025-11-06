@@ -7,23 +7,22 @@ type AnyComp = React.ComponentType<any>;
 
 export default function TsxRunner({
   source,
-  props,
 }: {
   source: string;                       // TSX source string
-  props?: Record<string, unknown>;      // props to pass into default export
 }) {
   const [Comp, setComp] = useState<AnyComp | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const transpiled = useMemo(() => {
+  
+
+   const transpiled = useMemo(() => {
     setError(null);
     try {
       const out = ts.transpileModule(source, {
         compilerOptions: {
           target: ts.ScriptTarget.ES2020,
-          module: ts.ModuleKind.CommonJS,          // avoid ESM imports in output
-          jsx: ts.JsxEmit.React,                   // classic runtime (no jsx-runtime)
-          // ensure type-only imports are removed
+          module: ts.ModuleKind.CommonJS,     // emits require(...)
+          jsx: ts.JsxEmit.React,              // classic runtime
           importsNotUsedAsValues: ts.ImportsNotUsedAsValues.Remove,
           preserveValueImports: false,
           skipLibCheck: true,
@@ -42,14 +41,26 @@ export default function TsxRunner({
     try {
       const exports: any = {};
       const module = { exports };
-      // Evaluate CommonJS-style and return default export
+
+      // Provide a tiny CommonJS shim so require("react") works
+      const requireShim = (id: string) => {
+        if (
+          id === "react" ||
+          id === "react/jsx-runtime" ||
+          id === "react/jsx-dev-runtime"
+        ) return React;
+        throw new Error(`Cannot require '${id}' in this sandbox`);
+      };
+
       const fn = new Function(
         "React",
         "exports",
         "module",
+        "require",
         `${transpiled}; return module.exports?.default ?? exports.default;`
       );
-      const DefaultExport = fn(React, exports, module);
+
+      const DefaultExport = fn(React, exports, module, requireShim);
       if (!DefaultExport) throw new Error("Module has no default export");
       setComp(() => DefaultExport as AnyComp);
     } catch (e: any) {
@@ -57,6 +68,7 @@ export default function TsxRunner({
       setComp(null);
     }
   }, [transpiled]);
+
 
   if (error) {
     return (
@@ -78,5 +90,5 @@ export default function TsxRunner({
   }
 
   // Render with user props (e.g., { lesson })
-  return <Comp {...props} />;
+  return <Comp />;
 }

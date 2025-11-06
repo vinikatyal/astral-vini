@@ -8,15 +8,17 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 
 
 export async function POST(req: Request) {
-  const { outline } = await req.json();
+  const { outline, tempLessonId } = await req.json();
 
   const supabase = await createClient();
 
   const { data: lesson, error } = await supabase
     .from("lessons")
-    .insert([{ outline, status: "generating" }])
+    .insert([{ outline, status: "generating", lessonId: tempLessonId }])
     .select()
     .single();
+
+
 
     // How can i pass this to ui in the mean while 
     // also pass to langfuse for tracking
@@ -24,6 +26,8 @@ export async function POST(req: Request) {
 
   console.log("Created lesson:", lesson);
   console.log("Not created lesson:", error);
+
+  // i want to send this to langfuse as well for tracking
 
   const splitPrompt = `
 You are a expert educational lesson planner. Create a detailed lesson plan outline for the given topic.
@@ -73,7 +77,8 @@ Outline: """${outline}"""
   return NextResponse.json({
     status: lessonPlanJSON.success ? "generated" : "error",
     outline: outline,
-    lessonId: lesson?.id,
+    id: lesson?.id,
+    lessonId: lesson?.lessonId,
     details: lessonPlanJSON.details,
   });
 }

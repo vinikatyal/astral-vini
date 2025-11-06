@@ -7,12 +7,12 @@ export default async function LessonDetailsPage({ params }: { params: { id: stri
   const param = await params // {locale: "id"}
   const id = await param.id // id
 
-  const lessonData = await fetch(process.env.BACKEND_URL + "/api/lessons/lesson?id=" + id);
+  const lessonData = await fetch(process.env.BASE_URL + "/api/lessons/lesson?id=" + id);
   const lessonInfo = await lessonData.json();
 
   console.log("Get lesson:", lessonInfo);
 
-  const res = await fetch(process.env.BACKEND_URL + "/api/lessons/lesson?id=" + id, {
+  const res = await fetch(process.env.BASE_URL + "/api/lessons/lesson?id=" + id, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({}),

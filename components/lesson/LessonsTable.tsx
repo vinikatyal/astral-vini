@@ -48,6 +48,7 @@ export default function LessonsTable({ lessons }: { lessons: Lesson[] }) {
                                     <td className="px-4 py-3 text-right">
                                         <button
                                             type="button"
+                                            disabled={l.status !== "generated"}
                                             onClick={() => router.push(`/lessons/${l.id}`)}
                                             className="rounded-xl border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
                                         >

@@ -37,7 +37,9 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const { lesson } = await req.json();
-  const chapterDetailsPrompt = `
+  console.log("Received lesson for chapter generation:", lesson);
+
+const chapterDetailsPrompt = `
 You are a senior Next.js + TypeScript developer.
 
 Task:
@@ -51,20 +53,30 @@ STRICT RULES:
   export default function LessonPage({ lesson }: { lesson: Lesson }): JSX.Element
   (If the import is unavailable in your environment, you may replace \`Lesson\` with \`any\`, but do not create new types.)
 - No data fetching; assume \`lesson\` is passed as a prop.
-- Use minimal JSX with Tailwind classes.
+- Use minimal JSX with Tailwind classes for styling.
 - No external libraries beyond React/JSX. No dynamic imports.
 
 What to render:
-1) A header with the lesson outline which is a text which is present in the \`outline\` field of the lesson.
-3) A detailed information of each lesson which is present in the \`details\` field of the lesson.
+1) A header with the lesson outline text from the \`lesson.outline\` field.
+2) The detailed lesson content from the \`lesson.details\` field.
+
+IMPORTANT - Handling the details field:
+- The \`lesson.details\` field can be either plain text or HTML.
+- If it contains HTML, render it using dangerouslySetInnerHTML: <div dangerouslySetInnerHTML={{ __html: lesson.details }} />
+- If it's plain text, render it normally in a <div> or <pre> tag with proper whitespace preservation.
+- Check if the content includes HTML tags (like <p>, <h1>, <div>, etc.) to determine the rendering approach.
+- Ensure images and markdown-like formatting render correctly if present.
 
 Implementation details:
 - Keep it simple; no state, effects, or suspense.
 - No runtime logging.
 - Export **only** the default component.
+- Style the page to be student-friendly and readable with proper spacing and typography.
+- Add a back button or link to return to the lessons list at /.
 - Don't add anything else.
 
 Respond with the complete .tsx file content (code only). Do not wrap in code fences.
+
 Here is the lesson data:
 ${JSON.stringify(lesson, null, 2)}
 `.trim();

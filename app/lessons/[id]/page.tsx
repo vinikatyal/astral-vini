@@ -15,7 +15,9 @@ export default async function LessonDetailsPage({ params }: { params: { id: stri
   const res = await fetch(process.env.BASE_URL + "/api/lessons/lesson?id=" + id, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({}),
+    body: JSON.stringify({
+      lesson: lessonInfo
+    }),
   });
 
   if (!res.ok) {

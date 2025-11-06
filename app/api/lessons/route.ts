@@ -20,6 +20,7 @@ export async function POST(req: Request) {
 
     // How can i pass this to ui in the mean while 
     // also pass to langfuse for tracking
+    // https://cloud.langfuse.com/docs/sdk/javascript/integrations/nextjs
 
   console.log("Created lesson:", lesson);
   console.log("Not created lesson:", error);
@@ -72,6 +73,7 @@ Outline: """${outline}"""
   return NextResponse.json({
     status: lessonPlanJSON.success ? "generated" : "error",
     outline: outline,
+    lessonId: lesson?.id,
     details: lessonPlanJSON.details,
   });
 }

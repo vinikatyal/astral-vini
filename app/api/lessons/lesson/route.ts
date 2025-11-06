@@ -1,4 +1,6 @@
 // /app/api/lessons/chapters/route.ts
+import { createClient } from "@/lib/supabase/server";
+
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
@@ -6,17 +8,35 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
+
+  const supabase = await createClient();
   const id = searchParams.get("id");
 
   if (!id) {
-    return NextResponse.json({ error: "Lesson ID is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Lesson ID is required" },
+      { status: 400 }
+    );
   }
+
+  const { data: lesson, error } = await supabase
+    .from("lessons")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    console.error("Error fetching line item:", error);
+  } else {
+    console.log("Line item data:", lesson);
+  }
+
   // Get Lesson Details from Supa base or any other DB here using id from query params
-  return NextResponse.json({ message: "Lesson Chapters API is working!" });
+  return NextResponse.json(lesson);
 }
 
 export async function POST(req: Request) {
- const { lesson } = await req.json();
+  const { lesson } = await req.json();
   const chapterDetailsPrompt = `
 You are a senior Next.js + TypeScript developer.
 
@@ -36,7 +56,6 @@ STRICT RULES:
 
 What to render:
 1) A header with the lesson outline which is a text which is present in the \`outline\` field of the lesson.
-2) A paragraph on descripton of the lesson which is present in the \`description\` field of the lesson.
 3) A detailed information of each lesson which is present in the \`details\` field of the lesson.
 
 Implementation details:
@@ -59,6 +78,7 @@ ${JSON.stringify(lesson, null, 2)}
   const code = typeScriptData.choices[0].message?.content;
 
   return NextResponse.json({
+    lesson: lesson,
     tsxSource: code,
   });
 }

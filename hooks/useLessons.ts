@@ -32,10 +32,9 @@ export function useLessons() {
       const result = await res.json();
       console.log("Generated Lessons:", result);
 
-      // Optimistically mark them as "generated"
      
       const generatedLessons: Lesson[] = [{
-        id: Math.random().toString(36).substr(2, 9),
+        id: result.lessonId,
         outline: result.outline,
         details: result.details,
         status: result.status,

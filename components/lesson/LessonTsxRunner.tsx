@@ -13,7 +13,6 @@ export default function TsxRunner({
   const [Comp, setComp] = useState<AnyComp | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  
 
    const transpiled = useMemo(() => {
     setError(null);

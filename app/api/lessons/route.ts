@@ -42,71 +42,102 @@ export async function POST(req: Request) {
 
   // i want to send this to langfuse as well for tracking
 
-const splitPrompt = `
+  const splitPrompt = `
 You are an expert educational content creator specializing in interactive lessons for all age groups.
 
-Your task is to transform the given outline/topic into a complete, engaging lesson that students will read and learn from directly.
+Your task is to transform the given outline into a comprehensive, engaging lesson with interactive elements.
 
-**LESSON CONTENT REQUIREMENTS:**
-- Write as if speaking directly to the student
-- Use clear, conversational language appropriate for all ages
-- Break complex concepts into simple, digestible explanations
-- Include practical examples and real-world applications
-- Add interactive elements (questions to think about, try-it-yourself sections)
-- Make it engaging and easy to follow from start to finish
+**LESSON REQUIREMENTS:**
+- Create actual lesson content, not a lesson plan (students will be reading/learning from this directly)
+- Break content into clear, digestible sections
+- Include explanations, examples, and practice opportunities
+- Make it engaging and age-appropriate for all learners
+- Use simple, clear language with progressive complexity
 
-**STRUCTURE GUIDELINES:**
-- Start with a brief introduction that hooks the reader
-- Explain concepts step-by-step with examples
-- Include practice exercises or activities students can do
-- End with a summary and key takeaways
+**VISUAL ELEMENTS:**
+You MUST include inline SVG diagrams to illustrate concepts. SVGs should be:
+- Small and performant (under 5KB each)
+- Simple, clean designs with clear labels
+- Use basic shapes (circles, rectangles, lines, paths)
+- Include 2-4 SVGs per lesson to visualize key concepts
+- Educational and directly relevant to the content
 
-**IMAGE GUIDELINES:**
-- Include 2-3 relevant educational images from Unsplash or Pexels
-- Images should directly illustrate the concepts being taught
-- Use proper HTML img tags with descriptive alt text
-
-**STYLING REQUIREMENTS:**
-- Use Tailwind CSS utility classes for all styling
-- Apply consistent spacing, typography, and color scheme
-- Suggested classes: text-2xl, text-lg, font-bold, mb-4, mt-6, p-4, bg-blue-50, rounded-lg, etc.
-- Make headings stand out with larger text and proper margins
-- Use background colors or borders to highlight important sections
+**STYLING GUIDELINES:**
+Use Tailwind CSS classes for all styling:
+- Headings: text-3xl font-bold mb-4, text-2xl font-semibold mb-3, text-xl font-medium mb-2
+- Paragraphs: text-base leading-relaxed mb-4
+- Containers: max-w-4xl mx-auto p-6
+- Cards/Sections: bg-white rounded-lg shadow-md p-6 mb-6
+- Lists: list-disc list-inside space-y-2
+- Code blocks: bg-gray-100 p-4 rounded font-mono text-sm
+- Emphasis: text-blue-600 font-semibold, bg-yellow-100 px-2 py-1 rounded
+- SVG containers: flex justify-center my-8
 
 **OUTPUT FORMAT:**
-Return ONLY a valid JSON object with NO markdown code fences, NO additional text outside the JSON.
+Return ONLY a valid JSON object with NO markdown code fences, NO additional text.
 
 Required JSON structure:
 {
   "success": true,
-  "outline": "The original outline/topic text",
-  "details": "Complete lesson content in pure HTML format with Tailwind CSS classes"
+  "outline": "${outline}",
+  "details": "Complete HTML lesson content here"
 }
 
-**HTML FORMAT RULES FOR "details" FIELD:**
-- Use semantic HTML tags: <h1>, <h2>, <h3>, <p>, <ul>, <ol>, <img>, <div>, etc.
-- NO markdown syntax (no #, **, [], etc.)
-- NO code blocks with backticks
-- Apply Tailwind classes directly to HTML elements
-- All content must be properly structured HTML
-
-**EXAMPLE HTML STRUCTURE:**
+**HTML STRUCTURE FOR DETAILS:**
 <div class="max-w-4xl mx-auto p-6">
-  <h1 class="text-3xl font-bold mb-6 text-gray-800">Lesson Title</h1>
-  <p class="text-lg mb-4">Introduction paragraph...</p>
-  <img src="image-url" alt="description" class="w-full rounded-lg shadow-md my-6" />
-  <h2 class="text-2xl font-semibold mt-8 mb-4 text-gray-700">Section Heading</h2>
-  <p class="mb-4">Content...</p>
-  <div class="bg-blue-50 p-4 rounded-lg my-6">
-    <p class="font-semibold">Try This:</p>
-    <p>Interactive activity description...</p>
+  <h1 class="text-3xl font-bold mb-6 text-gray-800">[Lesson Title]</h1>
+  
+  <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+    <p class="text-sm text-gray-700">What you'll learn: [brief overview]</p>
+  </div>
+
+  <section class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <h2 class="text-2xl font-semibold mb-4 text-gray-800">[Section Title]</h2>
+    <p class="text-base leading-relaxed mb-4">[Content]</p>
+    
+    <div class="flex justify-center my-8">
+      <svg width="400" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+        <!-- Simple, educational SVG diagram here -->
+      </svg>
+    </div>
+    
+    <div class="bg-gray-50 p-4 rounded-lg mb-4">
+      <h3 class="text-lg font-medium mb-2">Example:</h3>
+      <p>[Practical example]</p>
+    </div>
+  </section>
+
+  <section class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <h2 class="text-2xl font-semibold mb-4 text-gray-800">[Next Section]</h2>
+    <!-- More content with SVGs -->
+  </section>
+
+  <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6">
+    <h3 class="text-lg font-semibold mb-2">Try It Yourself:</h3>
+    <p>[Practice exercise]</p>
+  </div>
+
+  <div class="bg-purple-50 p-6 rounded-lg">
+    <h3 class="text-xl font-semibold mb-3">Key Takeaways:</h3>
+    <ul class="list-disc list-inside space-y-2">
+      <li>[Point 1]</li>
+      <li>[Point 2]</li>
+    </ul>
   </div>
 </div>
 
-**TOPIC/OUTLINE TO TRANSFORM:**
+**SVG GUIDELINES:**
+- Keep viewBox proportional and clean
+- Use stroke-width="2" for lines
+- Use fill and stroke with hex colors (#3B82F6, #10B981, #F59E0B, etc.)
+- Add text labels with font-size="14" or "16"
+- Keep total SVG code under 1000 characters per diagram
+- Make diagrams self-explanatory
+
+**OUTLINE TO TRANSFORM:**
 """${outline}"""
 
-**CRITICAL:** Output ONLY the JSON object. The "details" field must contain pure HTML with Tailwind classes, no markdown whatsoever.
+Remember: Output ONLY the JSON object. No markdown, no code fences, no extra text. The details field must contain complete HTML with Tailwind classes and inline SVG diagrams.
 `.trim();
 
   const model = "gpt-4o-mini";
@@ -145,7 +176,7 @@ Required JSON structure:
     await supabase
       .from("lessons")
       .update({
-        status: "generated",
+        status: "generated", // change this since code is not generated or move the code into this
         outline: outline,
         details: planData.details,
       })

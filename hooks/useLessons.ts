@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { Lesson } from "@/lib/types";
+import ts from "typescript";
 
 function tempId() {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -39,11 +40,22 @@ export function useLessons() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ outline: clean, tempLessonId: tempLessonId }),
       });
+
       if (!res.ok) throw new Error(await res.text());
 
       const lesson = await res.json();
 
-      console.log("Generated lesson on front end:", lesson);
+      const res1 = await fetch("/api/lessons/lesson?id=" + lesson.lessonId, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lesson: lesson,
+        }),
+      });
+
+      const lessonDetailedCode = await res1.json();
+
+      console.log("Generated lesson on front end:", lessonDetailedCode);
 
       setLessons((prev) =>
         prev.map((l) =>
@@ -53,6 +65,7 @@ export function useLessons() {
                 ...lesson,
                 status: lesson.status ?? "generated",
                 updated_at: new Date().toISOString(),
+                tsxSource: lessonDetailedCode.tsxSource,
               }
             : l
         )

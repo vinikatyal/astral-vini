@@ -55,6 +55,8 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const { lesson } = await req.json();
 
+   const supabase = await createClient();
+
   const chapterDetailsPrompt = `
 You are a senior Next.js + TypeScript developer.
 
@@ -120,6 +122,16 @@ Respond with the complete .tsx file content (code only). Do not wrap in code fen
   });
 
   const code = completion.choices[0].message?.content ?? "";
+
+   if (lesson.id) {
+    await supabase
+      .from("lessons")
+      .update({
+        status: "generated",
+        code: code,
+      })
+      .eq("id", lesson.id);
+  }
 
   console.log("Generated TSX code:", code);
 

@@ -65,7 +65,7 @@ export async function POST(req: Request) {
     secretKey: process.env.LANGFUSE_SECRET_KEY!,
   });
 
-  // Create a main trace for the chapter generation workflow
+  // Create a main trace for the lesson code generation workflow
   const trace = langfuse.trace({
     name: "generate-lesson-code-workflow",
     userId: "anonymous",

@@ -8,9 +8,11 @@ function tempId(): string {
     : `temp_${Date.now()}`;
 }
 
+
 interface UseLessonsReturn {
   lessons: Lesson[];
   loading: boolean;
+  initialLoading: boolean; // New state
   error: string | null;
   generateLesson: (outline: string) => Promise<void>;
   fetchLessons: () => Promise<void>;
@@ -21,10 +23,10 @@ interface UseLessonsReturn {
 export function useLessons(): UseLessonsReturn {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchLessons = useCallback(async () => {
-    setLoading(true);
     setError(null);
 
     try {
@@ -45,7 +47,7 @@ export function useLessons(): UseLessonsReturn {
       console.error("Error fetching lessons:", e);
       setError(errorMessage);
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
     }
   }, []);
 
@@ -127,7 +129,6 @@ export function useLessons(): UseLessonsReturn {
     }
   }, []);
 
-  // Fetch lessons on mount
   useEffect(() => {
     fetchLessons();
   }, [fetchLessons]);
@@ -135,6 +136,7 @@ export function useLessons(): UseLessonsReturn {
   return { 
     lessons, 
     loading, 
+    initialLoading,
     error, 
     generateLesson, 
     fetchLessons, 

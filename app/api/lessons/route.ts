@@ -7,6 +7,27 @@ import OpenAI from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 
+export async function GET() {
+
+  const supabase = await createClient();
+  const { data: lessons, error } = await supabase
+    .from("lessons")
+    .select("*")
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error("Error fetching line items:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch lessons" },
+      { status: 500 }
+    );
+  } else {
+    console.log("Data Items:", lessons);
+  }
+
+  return NextResponse.json(lessons);
+}
+
 export async function POST(req: Request) {
   const { outline, tempLessonId } = await req.json();
 
@@ -17,6 +38,15 @@ export async function POST(req: Request) {
     .insert([{ outline, status: "generating", lessonId: tempLessonId }])
     .select()
     .single();
+
+  
+  if (error) {
+    console.error("Error inserting lesson:", error);
+    return NextResponse.json(
+      { error: "Failed to create lesson" },
+      { status: 500 }
+    );
+  }
 
   const langfuse = new Langfuse({
     publicKey: process.env.LANGFUSE_PUBLIC_KEY!,
@@ -54,13 +84,6 @@ Your task is to transform the given outline into a comprehensive, engaging lesso
 - Make it engaging and age-appropriate for all learners
 - Use simple, clear language with progressive complexity
 
-**VISUAL ELEMENTS:**
-You MUST include inline SVG diagrams to illustrate concepts. SVGs should be:
-- Small and performant (under 5KB each)
-- Simple, clean designs with clear labels
-- Use basic shapes (circles, rectangles, lines, paths)
-- Include 2-4 SVGs per lesson to visualize key concepts
-- Educational and directly relevant to the content
 
 **STYLING GUIDELINES:**
 Use Tailwind CSS classes for all styling:
@@ -71,7 +94,6 @@ Use Tailwind CSS classes for all styling:
 - Lists: list-disc list-inside space-y-2
 - Code blocks: bg-gray-100 p-4 rounded font-mono text-sm
 - Emphasis: text-blue-600 font-semibold, bg-yellow-100 px-2 py-1 rounded
-- SVG containers: flex justify-center my-8
 
 **OUTPUT FORMAT:**
 Return ONLY a valid JSON object with NO markdown code fences, NO additional text.
@@ -95,12 +117,6 @@ Required JSON structure:
     <h2 class="text-2xl font-semibold mb-4 text-gray-800">[Section Title]</h2>
     <p class="text-base leading-relaxed mb-4">[Content]</p>
     
-    <div class="flex justify-center my-8">
-      <svg width="400" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
-        <!-- Simple, educational SVG diagram here -->
-      </svg>
-    </div>
-    
     <div class="bg-gray-50 p-4 rounded-lg mb-4">
       <h3 class="text-lg font-medium mb-2">Example:</h3>
       <p>[Practical example]</p>
@@ -109,7 +125,7 @@ Required JSON structure:
 
   <section class="bg-white rounded-lg shadow-md p-6 mb-6">
     <h2 class="text-2xl font-semibold mb-4 text-gray-800">[Next Section]</h2>
-    <!-- More content with SVGs -->
+    <!-- More content -->
   </section>
 
   <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6">
@@ -125,14 +141,6 @@ Required JSON structure:
     </ul>
   </div>
 </div>
-
-**SVG GUIDELINES:**
-- Keep viewBox proportional and clean
-- Use stroke-width="2" for lines
-- Use fill and stroke with hex colors (#3B82F6, #10B981, #F59E0B, etc.)
-- Add text labels with font-size="14" or "16"
-- Keep total SVG code under 1000 characters per diagram
-- Make diagrams self-explanatory
 
 **OUTLINE TO TRANSFORM:**
 """${outline}"""
@@ -170,8 +178,6 @@ Remember: Output ONLY the JSON object. No markdown, no code fences, no extra tex
     },
   });
 
-  console.log("Split response:", planData);
-
   if (lesson.id) {
     await supabase
       .from("lessons")
@@ -179,6 +185,7 @@ Remember: Output ONLY the JSON object. No markdown, no code fences, no extra tex
         status: "generated", // change this since code is not generated or move the code into this
         outline: outline,
         details: planData.details,
+        updated_at: new Date().toISOString(),
       })
       .eq("id", lesson.id);
   }

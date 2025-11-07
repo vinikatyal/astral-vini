@@ -103,7 +103,6 @@ Respond with the complete .tsx file content (code only). Do not wrap in code fen
 
   const cached = await redis.get<string>(key);
 
-  console.log("Cache key:", key, "Cached:", Boolean(cached));
   if (cached) {
     return NextResponse.json({
       tsxSource: cached,
@@ -111,8 +110,6 @@ Respond with the complete .tsx file content (code only). Do not wrap in code fen
       lesson: lesson,
     });
   }
-
-   console.log("Cached TSX code:", cached);
 
   // Call OpenAI
   const completion = await openai.chat.completions.create({
@@ -128,12 +125,11 @@ Respond with the complete .tsx file content (code only). Do not wrap in code fen
       .from("lessons")
       .update({
         status: "generated",
+        updated_at: new Date().toISOString(),
         code: code,
       })
       .eq("id", lesson.id);
   }
-
-  console.log("Generated TSX code:", code);
 
   // Cache the result (TTL 1 hour)
   await redis.set(key, code);

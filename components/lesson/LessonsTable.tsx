@@ -23,7 +23,7 @@ export default function LessonsTable({ lessons }: { lessons: Lesson[] }) {
                             <tr className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
                                 <th className="px-4 py-3">Title</th>
                                 <th className="px-4 py-3">Status</th>
-                                <th className="px-4 py-3">Updated</th>
+                                <th className="px-4 py-3">Updated </th>
                                 <th className="px-4 py-3 text-right">Open</th>
                             </tr>
                         </thead>

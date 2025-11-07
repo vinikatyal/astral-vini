@@ -34,6 +34,7 @@ export default function LessonForm({
         className="w-full rounded-2xl border border-gray-200 bg-white p-4 shadow-sm outline-none focus:ring-4 focus:ring-indigo-100"
         rows={6}
       />
+    {/* // Choose a way lesson is delivered  */}
       <div className="mt-3 flex items-center gap-3">
         <button
           type="submit"

@@ -1,26 +1,63 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { Lesson } from "@/lib/types";
-import ts from "typescript";
 
-function tempId() {
+function tempId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
     : `temp_${Date.now()}`;
 }
 
-export function useLessons() {
+interface UseLessonsReturn {
+  lessons: Lesson[];
+  loading: boolean;
+  error: string | null;
+  generateLesson: (outline: string) => Promise<void>;
+  fetchLessons: () => Promise<void>;
+  setError: React.Dispatch<React.SetStateAction<string | null>>;
+  setLessons: React.Dispatch<React.SetStateAction<Lesson[]>>;
+}
+
+export function useLessons(): UseLessonsReturn {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function generateLesson(outline: string) {
+  const fetchLessons = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/lessons", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || "Failed to fetch lessons");
+      }
+
+      const data: Lesson[] = await res.json();
+      setLessons(data);
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : "Failed to fetch lessons.";
+      console.error("Error fetching lessons:", e);
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const generateLesson = useCallback(async (outline: string): Promise<void> => {
     setError(null);
     const clean = outline.trim();
+    
     if (!clean) {
       setError("Please enter a lesson outline.");
       return;
     }
+
     setLoading(true);
 
     const tempLessonId = tempId();
@@ -32,30 +69,35 @@ export function useLessons() {
       status: "generating",
       updated_at: new Date().toISOString(),
     };
+
     setLessons((prev) => [optimistic, ...prev]);
 
     try {
       const res = await fetch("/api/lessons", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ outline: clean, tempLessonId: tempLessonId }),
+        body: JSON.stringify({ outline: clean, tempLessonId }),
       });
 
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || "Failed to create lesson");
+      }
 
-      const lesson = await res.json();
+      const lesson: Lesson = await res.json();
 
-      const res1 = await fetch("/api/lessons/lesson?id=" + lesson.lessonId, {
+      const res1 = await fetch(`/api/lessons/lesson?id=${lesson.lessonId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          lesson: lesson,
-        }),
+        body: JSON.stringify({ lesson }),
       });
 
-      const lessonDetailedCode = await res1.json();
+      if (!res1.ok) {
+        const errorText = await res1.text();
+        throw new Error(errorText || "Failed to generate lesson details");
+      }
 
-      console.log("Generated lesson on front end:", lessonDetailedCode);
+      const lessonDetailedCode = await res1.json();
 
       setLessons((prev) =>
         prev.map((l) =>
@@ -70,19 +112,33 @@ export function useLessons() {
             : l
         )
       );
-    } catch (e: any) {
-      console.error(e);
-      setError(e?.message || "Failed to create lesson.");
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : "Failed to create lesson.";
+      console.error("Error generating lesson:", e);
+      setError(errorMessage);
 
       setLessons((prev) =>
         prev.map((l) =>
-          l.id === tempLessonId ? { ...l, status: "failed" } : l
+          l.id === tempLessonId ? { ...l, status: "failed" as const } : l
         )
       );
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  return { lessons, loading, error, generateLesson, setError, setLessons };
+  // Fetch lessons on mount
+  useEffect(() => {
+    fetchLessons();
+  }, [fetchLessons]);
+
+  return { 
+    lessons, 
+    loading, 
+    error, 
+    generateLesson, 
+    fetchLessons, 
+    setError, 
+    setLessons 
+  };
 }

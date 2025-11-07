@@ -8,8 +8,6 @@ export default async function LessonDetailsPage({ params }: { params: { id: stri
   const lessonData = await fetch(process.env.BASE_URL + "/api/lessons/lesson?id=" + id);
   const lessonInfo = await lessonData.json();
 
-  console.log("Get lesson:", lessonInfo);
-
 
   // create chapter api here
   return <div>

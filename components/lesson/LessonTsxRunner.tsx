@@ -84,11 +84,10 @@ export default function TsxRunner({
   if (!Comp) {
     return (
       <main className="mx-auto max-w-3xl p-6">
-        <p className="text-gray-600">Loading TypeScript…</p>
+        <p className="text-gray-600">Loading Lesson Plan....</p>
       </main>
     );
   }
 
-  // Render with user props (e.g., { lesson })
   return <Comp />;
 }

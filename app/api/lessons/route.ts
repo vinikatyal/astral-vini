@@ -40,27 +40,26 @@ export async function POST(req: Request) {
   // also pass to langfuse for tracking
   // https://cloud.langfuse.com/docs/sdk/javascript/integrations/nextjs
 
-  console.log("Created lesson:", lesson);
-  console.log("Not created lesson:", error);
-
   // i want to send this to langfuse as well for tracking
 
-  const splitPrompt = `
-You are an expert educational lesson planner specializing in creating comprehensive, student-friendly lesson plans.
+const splitPrompt = `
+You are an expert educational content creator specializing in creating comprehensive, interactive lessons for all age groups.
 
-Your task is to transform the given outline into a detailed, structured lesson plan that students can easily follow and understand.
+Your task is to transform the given outline into a complete, detailed lesson that students can read and learn from directly.
 
-**LESSON PLAN REQUIREMENTS:**
-- Include clear learning objectives
-- Break down content into digestible sections with headings
-- Add estimated time for each section
-- Include practical examples and activities where relevant
-- Suggest assessment methods or reflection questions
-- Make it engaging and age-appropriate
+**LESSON CONTENT REQUIREMENTS:**
+- Write in a clear, conversational teaching style as if speaking directly to the student
+- Include clear explanations of all concepts
+- Break down content into logical sections with proper structure
+- Add practical examples, demonstrations, and interactive elements where relevant
+- Include practice exercises or questions for self-assessment
+- Make it engaging and accessible for all age groups
+- Ensure content flows naturally from introduction to conclusion
 
 **IMAGE GUIDELINES:**
 - Add 1-2 relevant educational images from Unsplash or Pexels per major section
-- Only include images that enhance understanding of the topic
+- Images must enhance understanding of the topic
+- Use proper HTML img tags with src and alt attributes
 
 **OUTPUT FORMAT:**
 Return ONLY a valid JSON object with NO markdown formatting, NO code fences, NO additional text.
@@ -69,15 +68,25 @@ Required JSON structure:
 {
   "success": true,
   "outline": "The original outline text provided by the student",
-  "details": "Complete detailed lesson plan in plain text format with markdown for structure and images. Include: title, learning objectives, materials needed, time breakdown, step-by-step instructions, activities, and assessment suggestions."
+  "details": "Complete lesson content in HTML format only. Use HTML tags for all formatting: <h1>, <h2>, <p>, <ul>, <ol>, <strong>, <em>, <img>, <div>, etc. NO markdown symbols like #, *, -, etc."
 }
 
-The details field should be either text string or html no markdown formatting.
+**HTML FORMATTING RULES:**
+- Use <h1> for main title
+- Use <h2> for major sections
+- Use <h3> for subsections
+- Use <p> for paragraphs
+- Use <ul> and <li> for bullet lists
+- Use <ol> and <li> for numbered lists
+- Use <strong> for bold text
+- Use <em> for italic text
+- Use <img src="URL" alt="description" style="max-width:100%; height:auto;"> for images
+- Use <div class="section"> to wrap major sections if needed
 
 **OUTLINE TO TRANSFORM:**
 """${outline}"""
 
-**Remember:** Output pure JSON only. The "details" field should contain the full lesson plan as a text string with markdown formatting for readability.
+**Critical:** Output pure JSON only. The "details" field must contain the complete lesson as an HTML string with proper tags. Absolutely NO markdown formatting (no #, *, -, etc.).
 `.trim();
 
   const model = "gpt-4o-mini";

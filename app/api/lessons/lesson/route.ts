@@ -1,9 +1,11 @@
-// /app/api/lessons/chapters/route.ts
+// /app/api/lessons/lesson/route.ts
 import { createClient } from "@/lib/supabase/server";
-
+import { Langfuse } from "langfuse";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
+
+const model = "gpt-4o-mini";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
@@ -55,7 +57,26 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const { lesson } = await req.json();
 
-   const supabase = await createClient();
+  const supabase = await createClient();
+
+  // Initialize Langfuse
+  const langfuse = new Langfuse({
+    publicKey: process.env.LANGFUSE_PUBLIC_KEY!,
+    secretKey: process.env.LANGFUSE_SECRET_KEY!,
+  });
+
+  // Create a main trace for the chapter generation workflow
+  const trace = langfuse.trace({
+    name: "generate-lesson-code-workflow",
+    userId: "anonymous",
+    metadata: {
+      lessonId: lesson?.lessonId,
+      dbId: lesson?.id,
+      outline: lesson?.outline,
+      timestamp: new Date().toISOString(),
+    },
+    tags: ["code-generation"],
+  });
 
   const chapterDetailsPrompt = `
 You are a senior Next.js + TypeScript developer.
@@ -95,15 +116,38 @@ ${JSON.stringify(lesson, null, 2)}
 Respond with the complete .tsx file content (code only). Do not wrap in code fences or add any explanatory text.
 `.trim();
 
-  // Above prompt needs to be worked on still to handle details as html or text properly.
-  // Also not hard code basis lesson etc
-
   // create a hash-based key (deterministic)
   const key = await hashKey(chapterDetailsPrompt);
 
+  // Track cache check
+  const cacheCheckSpan = trace.span({
+    name: "check-redis-cache",
+    input: { key },
+    metadata: {
+      step: "1-cache-lookup",
+    },
+  });
+
   const cached = await redis.get<string>(key);
 
+  cacheCheckSpan.end({
+    output: { cached: !!cached, found: !!cached },
+    metadata: {
+      cacheHit: !!cached,
+    },
+  });
+
   if (cached) {
+    trace.update({
+      metadata: {
+        cacheHit: true,
+        completedAt: new Date().toISOString(),
+      },
+    });
+
+    // Flush langfuse events
+    await langfuse.flushAsync();
+
     return NextResponse.json({
       tsxSource: cached,
       cached: true,
@@ -111,16 +155,47 @@ Respond with the complete .tsx file content (code only). Do not wrap in code fen
     });
   }
 
+  // Create generation span for OpenAI call
+  const codeGeneration = trace.generation({
+    name: "generate-tsx-component",
+    input: chapterDetailsPrompt,
+    model: model,
+    metadata: {
+      step: "2-code-generation",
+      purpose: "Generate TypeScript React component for lesson page",
+      lessonStructure: Object.keys(lesson),
+    },
+  });
+
   // Call OpenAI
   const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: model,
     messages: [{ role: "user", content: chapterDetailsPrompt }],
     temperature: 0,
   });
 
   const code = completion.choices[0].message?.content ?? "";
 
-   if (lesson.id) {
+  // End the generation span
+  codeGeneration.end({
+    output: { code, codeLength: code.length },
+    metadata: {
+      tokensUsed: completion.usage?.total_tokens,
+      promptTokens: completion.usage?.prompt_tokens,
+      completionTokens: completion.usage?.completion_tokens,
+    },
+  });
+
+  // Track database update
+  const dbUpdateSpan = trace.span({
+    name: "update-lesson-database",
+    input: { lessonId: lesson.id },
+    metadata: {
+      step: "3-database-update",
+    },
+  });
+
+  if (lesson.id) {
     await supabase
       .from("lessons")
       .update({
@@ -131,9 +206,38 @@ Respond with the complete .tsx file content (code only). Do not wrap in code fen
       .eq("id", lesson.id);
   }
 
+  dbUpdateSpan.end({
+    output: { success: true },
+  });
+
+  // Track cache storage
+  const cacheStoreSpan = trace.span({
+    name: "store-redis-cache",
+    input: { key, ttl: 3600 },
+    metadata: {
+      step: "4-cache-storage",
+    },
+  });
+
   // Cache the result (TTL 1 hour)
   await redis.set(key, code);
   await redis.expire(key, 60 * 60);
+
+  cacheStoreSpan.end({
+    output: { success: true },
+  });
+
+  // Update trace with final metadata
+  trace.update({
+    metadata: {
+      cacheHit: false,
+      codeGenerated: true,
+      completedAt: new Date().toISOString(),
+    },
+  });
+
+  // Flush langfuse events before returning
+  await langfuse.flushAsync();
 
   return NextResponse.json({
     lesson: lesson,

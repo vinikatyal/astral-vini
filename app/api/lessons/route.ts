@@ -5,6 +5,8 @@ import { Langfuse } from "langfuse";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
+const model = "gpt-4o-mini";
+
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 
 export async function GET() {
@@ -142,13 +144,15 @@ Required JSON structure:
   </div>
 </div>
 
+**REMEMBER:** 
+My html will be injected directly into a React component, so ensure all class names use Tailwind CSS conventions
+Don't add any next related code - just pure HTML with Tailwind classes
+
 **OUTLINE TO TRANSFORM:**
 """${outline}"""
 
-Remember: Output ONLY the JSON object. No markdown, no code fences, no extra text. The details field must contain complete HTML with Tailwind classes and inline SVG diagrams.
+Remember: Output ONLY the JSON object. No markdown, no code fences, no extra text. The details field must contain complete HTML with Tailwind classes.
 `.trim();
-
-  const model = "gpt-4o-mini";
 
   const planGeneration = trace.generation({
     name: "generate-lesson-plan",

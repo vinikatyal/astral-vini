@@ -43,50 +43,70 @@ export async function POST(req: Request) {
   // i want to send this to langfuse as well for tracking
 
 const splitPrompt = `
-You are an expert educational content creator specializing in creating comprehensive, interactive lessons for all age groups.
+You are an expert educational content creator specializing in interactive lessons for all age groups.
 
-Your task is to transform the given outline into a complete, detailed lesson that students can read and learn from directly.
+Your task is to transform the given outline/topic into a complete, engaging lesson that students will read and learn from directly.
 
 **LESSON CONTENT REQUIREMENTS:**
-- Write in a clear, conversational teaching style as if speaking directly to the student
-- Include clear explanations of all concepts
-- Break down content into logical sections with proper structure
-- Add practical examples, demonstrations, and interactive elements where relevant
-- Include practice exercises or questions for self-assessment
-- Make it engaging and accessible for all age groups
-- Ensure content flows naturally from introduction to conclusion
+- Write as if speaking directly to the student
+- Use clear, conversational language appropriate for all ages
+- Break complex concepts into simple, digestible explanations
+- Include practical examples and real-world applications
+- Add interactive elements (questions to think about, try-it-yourself sections)
+- Make it engaging and easy to follow from start to finish
+
+**STRUCTURE GUIDELINES:**
+- Start with a brief introduction that hooks the reader
+- Explain concepts step-by-step with examples
+- Include practice exercises or activities students can do
+- End with a summary and key takeaways
 
 **IMAGE GUIDELINES:**
-- Add 1-2 relevant educational images from Unsplash or Pexels per major section
-- Images must enhance understanding of the topic
-- Use proper HTML img tags with src and alt attributes
+- Include 2-3 relevant educational images from Unsplash or Pexels
+- Images should directly illustrate the concepts being taught
+- Use proper HTML img tags with descriptive alt text
+
+**STYLING REQUIREMENTS:**
+- Use Tailwind CSS utility classes for all styling
+- Apply consistent spacing, typography, and color scheme
+- Suggested classes: text-2xl, text-lg, font-bold, mb-4, mt-6, p-4, bg-blue-50, rounded-lg, etc.
+- Make headings stand out with larger text and proper margins
+- Use background colors or borders to highlight important sections
 
 **OUTPUT FORMAT:**
-Return ONLY a valid JSON object with NO markdown formatting, NO code fences, NO additional text.
+Return ONLY a valid JSON object with NO markdown code fences, NO additional text outside the JSON.
 
 Required JSON structure:
 {
   "success": true,
-  "outline": "The original outline text provided by the student",
-  "details": "Complete lesson content in HTML format only. Use HTML tags for all formatting: <h1>, <h2>, <p>, <ul>, <ol>, <strong>, <em>, <img>, <div>, etc. NO markdown symbols like #, *, -, etc."
+  "outline": "The original outline/topic text",
+  "details": "Complete lesson content in pure HTML format with Tailwind CSS classes"
 }
 
-**HTML FORMATTING RULES:**
-- Use <h1> for main title
-- Use <h2> for major sections
-- Use <h3> for subsections
-- Use <p> for paragraphs
-- Use <ul> and <li> for bullet lists
-- Use <ol> and <li> for numbered lists
-- Use <strong> for bold text
-- Use <em> for italic text
-- Use <img src="URL" alt="description" style="max-width:100%; height:auto;"> for images
-- Use <div class="section"> to wrap major sections if needed
+**HTML FORMAT RULES FOR "details" FIELD:**
+- Use semantic HTML tags: <h1>, <h2>, <h3>, <p>, <ul>, <ol>, <img>, <div>, etc.
+- NO markdown syntax (no #, **, [], etc.)
+- NO code blocks with backticks
+- Apply Tailwind classes directly to HTML elements
+- All content must be properly structured HTML
 
-**OUTLINE TO TRANSFORM:**
+**EXAMPLE HTML STRUCTURE:**
+<div class="max-w-4xl mx-auto p-6">
+  <h1 class="text-3xl font-bold mb-6 text-gray-800">Lesson Title</h1>
+  <p class="text-lg mb-4">Introduction paragraph...</p>
+  <img src="image-url" alt="description" class="w-full rounded-lg shadow-md my-6" />
+  <h2 class="text-2xl font-semibold mt-8 mb-4 text-gray-700">Section Heading</h2>
+  <p class="mb-4">Content...</p>
+  <div class="bg-blue-50 p-4 rounded-lg my-6">
+    <p class="font-semibold">Try This:</p>
+    <p>Interactive activity description...</p>
+  </div>
+</div>
+
+**TOPIC/OUTLINE TO TRANSFORM:**
 """${outline}"""
 
-**Critical:** Output pure JSON only. The "details" field must contain the complete lesson as an HTML string with proper tags. Absolutely NO markdown formatting (no #, *, -, etc.).
+**CRITICAL:** Output ONLY the JSON object. The "details" field must contain pure HTML with Tailwind classes, no markdown whatsoever.
 `.trim();
 
   const model = "gpt-4o-mini";

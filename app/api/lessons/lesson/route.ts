@@ -110,6 +110,8 @@ Respond with the complete .tsx file content (code only). Do not wrap in code fen
     });
   }
 
+   console.log("Cached TSX code:", cached);
+
   // Call OpenAI
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
@@ -118,6 +120,8 @@ Respond with the complete .tsx file content (code only). Do not wrap in code fen
   });
 
   const code = completion.choices[0].message?.content ?? "";
+
+  console.log("Generated TSX code:", code);
 
   // Cache the result (TTL 1 hour)
   await redis.set(key, code);

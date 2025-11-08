@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
 
-const model = "gpt-4o-mini";
+const model = "gpt-4o";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
@@ -82,17 +82,20 @@ export async function POST(req: Request) {
 You are a senior Next.js + TypeScript developer.
 
 Task:
-Generate a complete TypeScript React page component that renders a detailed lesson at the route \`/lessons/[id]\`.
+Generate a complete TypeScript React CLIENT COMPONENT that renders a detailed lesson.
 
 STRICT RULES:
 - Output **TypeScript code only** (no markdown, no commentary, no code fences).
-- This is a **server-side rendered** Next.js page component.
+- This is a **client-side** Next.js component that will be dynamically executed in the browser.
+- Add "use client" directive at the top of the file.
 - Generate ALL necessary TypeScript types/interfaces based on the lesson data structure provided.
 - Component signature MUST be:
-  export default function LessonPage({ params }: { params: { id: string } })
-- The lesson data will be available as shown below - use it directly in the component.
+  export default function LessonPage()
+- The lesson data is hardcoded inside the component (see below).
 - Use Tailwind CSS for styling.
-- No external libraries beyond React/Next.js built-ins.
+- NO imports from Next.js (no Link, no useRouter, no GetServerSideProps, etc.).
+- NO server-side features - this runs entirely in the browser.
+- Use regular HTML <a> tags for navigation instead of Next.js Link.
 
 What to render:
 1) A header with the lesson outline from the \`outline\` field
@@ -100,7 +103,7 @@ What to render:
    - The \`details\` field can be either plain text OR HTML
    - If it contains HTML tags, render it using dangerouslySetInnerHTML
    - If it's plain text with markdown formatting, render it as formatted text
-3) Add a "Back to Lessons" link that navigates to "/"
+3) Add a "Back to Lessons" link using <a href="/"> that navigates to "/"
 4) Make the layout clean, readable, and student-friendly
 
 Implementation details:
@@ -109,8 +112,9 @@ Implementation details:
 - Handle both text and HTML content gracefully
 - Include proper semantic HTML structure
 - Make it responsive
+- Define the lesson data object inside the component
 
-Here is the lesson data structure:
+Here is the lesson data structure to hardcode:
 ${JSON.stringify(lesson, null, 2)}
 
 Respond with the complete .tsx file content (code only). Do not wrap in code fences or add any explanatory text.

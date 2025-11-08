@@ -8,20 +8,20 @@ type AnyComp = React.ComponentType<any>;
 export default function TsxRunner({
   source,
 }: {
-  source: string;                       // TSX source string
+  source: string;
 }) {
   const [Comp, setComp] = useState<AnyComp | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-
-   const transpiled = useMemo(() => {
+  const transpiled = useMemo(() => {
     setError(null);
     try {
       const out = ts.transpileModule(source, {
         compilerOptions: {
           target: ts.ScriptTarget.ES2020,
-          module: ts.ModuleKind.CommonJS,     // emits require(...)
-          jsx: ts.JsxEmit.React,              // classic runtime
+          module: ts.ModuleKind.CommonJS,
+          jsx: ts.JsxEmit.ReactJSX,
+          jsxImportSource: "react",
           importsNotUsedAsValues: ts.ImportsNotUsedAsValues.Remove,
           preserveValueImports: false,
           skipLibCheck: true,
@@ -41,13 +41,19 @@ export default function TsxRunner({
       const exports: any = {};
       const module = { exports };
 
-      // Provide a tiny CommonJS shim so require("react") works
       const requireShim = (id: string) => {
-        if (
-          id === "react" ||
-          id === "react/jsx-runtime" ||
-          id === "react/jsx-dev-runtime"
-        ) return React;
+        if (id === "react") return React;
+        if (id === "react/jsx-runtime" || id === "react/jsx-dev-runtime") {
+          // Return jsx runtime functions
+          return {
+            jsx: React.createElement,
+            jsxs: React.createElement,
+            Fragment: React.Fragment,
+          };
+        }
+        if (id === "next" || id.startsWith("next/")) {
+          return {};
+        }
         throw new Error(`Cannot require '${id}' in this sandbox`);
       };
 
@@ -67,7 +73,6 @@ export default function TsxRunner({
       setComp(null);
     }
   }, [transpiled]);
-
 
   if (error) {
     return (

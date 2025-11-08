@@ -4,7 +4,7 @@ import { Langfuse } from "langfuse";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
-const model = "gpt-4o-mini";
+const model = "gpt-4o";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 

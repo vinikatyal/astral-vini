@@ -25,11 +25,13 @@ async function hashKey(prompt: string) {
   return `gpt-cache:${hash}`;
 }
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const id = (await params).id;
 
   const supabase = await createClient();
-  const id = searchParams.get("id");
 
   if (!id) {
     return NextResponse.json(

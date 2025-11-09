@@ -88,7 +88,7 @@ export function useLessons(): UseLessonsReturn {
 
       const lesson: Lesson = await res.json();
 
-      const res1 = await fetch(`/api/lessons/lesson?id=${lesson.lessonId}`, {
+      const res1 = await fetch(`/api/lessons/${lesson.lessonId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lesson }),

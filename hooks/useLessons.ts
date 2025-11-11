@@ -28,7 +28,6 @@ export function useLessons(): UseLessonsReturn {
 
   const fetchLessons = useCallback(async () => {
     setError(null);
-
     try {
       const res = await fetch("/api/lessons", {
         method: "GET",

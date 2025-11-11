@@ -13,6 +13,7 @@ export default function StatusBadge({ status }: { status: LessonStatus }) {
                 : "bg-rose-100 text-rose-700 ring-1 ring-rose-200";
     const dot =
         status === "generated" ? "bg-green-500" : status === "generating" ? "bg-amber-500" : "bg-rose-500";
+    
     return (
         <span className={`${base} ${cls}`}>
             <span className={`h-2 w-2 rounded-full ${dot}`} />

@@ -87,18 +87,18 @@ export function useLessons(): UseLessonsReturn {
 
       const lesson: Lesson = await res.json();
 
-      const res1 = await fetch(`/api/lessons/${lesson.lessonId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lesson }),
-      });
+      // const res1 = await fetch(`/api/lessons/${lesson.lessonId}`, {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({ lesson }),
+      // });
 
-      if (!res1.ok) {
-        const errorText = await res1.text();
-        throw new Error(errorText || "Failed to generate lesson details");
-      }
+      // if (!res1.ok) {
+      //   const errorText = await res1.text();
+      //   throw new Error(errorText || "Failed to generate lesson details");
+      // }
 
-      const lessonDetailedCode = await res1.json();
+      // const lessonDetailedCode = await res1.json();
 
       setLessons((prev) =>
         prev.map((l) =>
@@ -108,7 +108,7 @@ export function useLessons(): UseLessonsReturn {
                 ...lesson,
                 status: lesson.status ?? "generated",
                 updated_at: new Date().toISOString(),
-                tsxSource: lessonDetailedCode.tsxSource,
+                tsxSource: lesson.code,
               }
             : l
         )

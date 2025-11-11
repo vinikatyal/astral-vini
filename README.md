@@ -1,10 +1,29 @@
-<a>
-Welcome to Lesson Plan Generator
-</a>
+# Lesson Plan Generator
 
-## Feedback and issues
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+## Installation
 
-## More Supabase examples
+```bash
+bun install
+```
 
+## Usage
+
+```bash
+bun run dev
+```
+
+## Build for testing
+
+```bash
+bun run build
+```
+
+## Contributing
+
+Pull requests are welcome. For major changes, please open an issue first
+to discuss what you would like to change.
+
+Please make sure to update tests as appropriate.
+
+## License

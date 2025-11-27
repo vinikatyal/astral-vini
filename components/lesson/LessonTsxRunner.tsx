@@ -1,42 +1,22 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import * as ts from "typescript";
+import React, { useEffect, useState } from "react";
 
 type AnyComp = React.ComponentType<any>;
 
 export default function TsxRunner({
-  source,
+  transpiled,
+  error: initialError,
 }: {
-  source: string;
+  transpiled: string;
+  error?: string | null;
 }) {
   const [Comp, setComp] = useState<AnyComp | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const transpiled = useMemo(() => {
-    setError(null);
-    try {
-      const out = ts.transpileModule(source, {
-        compilerOptions: {
-          target: ts.ScriptTarget.ES2020,
-          module: ts.ModuleKind.CommonJS,
-          jsx: ts.JsxEmit.ReactJSX,
-          jsxImportSource: "react",
-          importsNotUsedAsValues: ts.ImportsNotUsedAsValues.Remove,
-          preserveValueImports: false,
-          skipLibCheck: true,
-        },
-        reportDiagnostics: false,
-      });
-      return out.outputText;
-    } catch (e: any) {
-      setError(e?.message ?? String(e));
-      return "";
-    }
-  }, [source]);
+  const [error, setError] = useState<string | null>(initialError ?? null);
 
   useEffect(() => {
-    if (!transpiled) return;
+    if (!transpiled || initialError) return;
+
     try {
       const exports: any = {};
       const module = { exports };
@@ -44,7 +24,6 @@ export default function TsxRunner({
       const requireShim = (id: string) => {
         if (id === "react") return React;
         if (id === "react/jsx-runtime" || id === "react/jsx-dev-runtime") {
-          // Return jsx runtime functions
           return {
             jsx: React.createElement,
             jsxs: React.createElement,
@@ -72,7 +51,7 @@ export default function TsxRunner({
       setError(e?.message ?? String(e));
       setComp(null);
     }
-  }, [transpiled]);
+  }, [transpiled, initialError]);
 
   if (error) {
     return (
